@@ -19,22 +19,22 @@
 TODO: brief introduction.
 
 \section{Motivation}
-When a cluster of computers exists, it can be difficult to appoint and maintain a common leader. The Raft Consensus Algorithm (or RCA) was designed to solve this problem with simplicity in mind; an alternative algorithm, Paxos, is notoriously difficult to understand and implement. The RCA improves upon Paxos by maintaining its correctness and performance, but is vastly more understandable. 
+When a cluster of machines exists, it can be difficult to appoint and maintain a common leader as well as maintain a common log between all machines. The Raft Consensus Algorithm (or RCA) was designed to solve this problem with simplicity in mind. This is based off of an older consensus algorithm, Paxos, which is notoriously difficult to understand and implement. The RCA improves upon Paxos by maintaining its correctness and performance, but is vastly more understandable. 
 
 \section{Algorithm}
 Provide pseudocode for the algorithm that your team is investigating.  Provide pseudocode for the algorithm, and be sure to 
 
 \begin{algorithm}\caption{\textsc{Raft Consensus Algorithm: Leader}}
  \begin{algorithmic}[1]
-   \State {\bf Input:} nodeList[] \Comment {Network of computers}
-	\State $heartbeat ()$
-	\State $main()$
- \Function{heartbeat()}{} \Comment{done every 20ms}
+   \State {\bf Input:} MachineList[] \Comment {Network of computers}
+	\State $heartbeat () $
+	\State $main() $
+ \Function{heartbeat()} {} \Comment{done every 20ms}
    \For{$i \to nodeList.length()$}
-   	\State $sendHeartBeat( nodeList[i])$ \Comment{Sends a heartbeat packet to every machine in the} 
+   	\State $sendHeartBeat( nodeList[i]) $ \Comment{Sends a heartbeat packet to every machine in the} 
    \EndFor	\Comment{cluster that affirms that the current leader is still leader}
    \EndFunction
-   \Function{listenForChanges}{}
+   \Function{listenForChanges} {}
 %   \If {change from leader}
  %  \State{addEntryInLog()}
  %  \EndIf
@@ -43,22 +43,32 @@ Provide pseudocode for the algorithm that your team is investigating.  Provide p
 \end{algorithm}
 
 \begin{algorithm}\caption{\textsc{Raft Consensus Algorithm: Candidate}}
- \begin{algorithmic}
- \textsc{IncrementTermCounter}() \Comment {Keeps track of most up-to-date leader}
- \textsc{BroadcastElectionPacket()} \Comment{Send nodes an election notice to cause a vote}
- \Function{majorityOfVotesReceived()}{}
- 	\State $this.state = leader$ \Comment{Transition to Leader Node}
+ \begin{algorithmic}[1]
+ \State \textsc{IncrementTermCounter()} \Comment{Keeps track of most up-to-date leader}
+ \State \textsc{BroadcastElectionPacket()} \Comment{Send nodes an election notice to cause a vote}
+ \Function{majorityOfVotesReceived()} {}
+	\State $this.state = leader $ \Comment{Transition to Leader Node}
  \EndFunction\
- \Function{minorityOfVotesReceived()}{}
- 	\State $this.state = follower$ \Comment{Transition to Follwer Node}
+ \Function{minorityOfVotesReceived()} {}
+ 	\State $this.state = follower $ \Comment{Transition to Follwer Node}
  \EndFunction
- \end{algorithmic}
+\end{algorithmic}
 \end{algorithm}
 
-\section{Analysis}
-Optional: you are welcome to provide a brief proof of correctness or a 
-running time analysis of the algorithm.  The difficulty of doing this will, of 
-ocurse, depend on your algorithm.
+\begin{algorithm}\caption{\textsc{Raft Consensus Algorithm: Follower}}
+ \begin{algorithmic}[1]
+ \Function{heartbeatTimeoutOccurred()}{} \Comment{No Append Entries packet was received before randomized timeout}
+ 	\State{this.state = candidate} \Comment{Transition to a candidate}
+ \EndFunction
+ \State \textsc{BroadcastElectionPacket()} \Comment{Send nodes an election notice to cause a vote}
+ \Function{majorityOfVotesReceived()} {}
+	\State $this.state = leader $ \Comment{Transition to Leader Node}
+ \EndFunction\
+ \Function{minorityOfVotesReceived()} {}
+ 	\State $this.state = follower $ \Comment{Transition to Follwer Node}
+ \EndFunction
+\end{algorithmic}
+\end{algorithm}
 
 \section{Discussion}
 Conclude with a discussion.  Things that you might want to consider to put in 
@@ -66,6 +76,6 @@ the discussion (or maybe in their own sections) include: what are some variants
 of this algorithm? Where can this algorithm be applied?  What improvements can 
 be made to this algorithm (perhaps commenting on experimental results of the 
 original paper)?  Has there been follow-up work (trace the paper's citations in 
-google schoolar!)
+google scholar!)
 
 \end{document}
