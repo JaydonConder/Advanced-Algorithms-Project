@@ -24,7 +24,7 @@ When a cluster of machines exists, it can be difficult to appoint and maintain a
 \section{Algorithm}
 Provide pseudocode for the algorithm that your team is investigating.  Provide pseudocode for the algorithm, and be sure to 
 
-\begin{algorithm}\caption{\textsc{Raft Consensus Algorithm: Leader}}
+\begin{algorithm}[H]\caption{\textsc{Raft Consensus Algorithm: Leader}}
  \begin{algorithmic}[1]
    \State {\bf Input:} MachineList[] \Comment {Network of computers}
 	\State $heartbeat () $
@@ -42,31 +42,31 @@ Provide pseudocode for the algorithm that your team is investigating.  Provide p
  \end{algorithmic}
 \end{algorithm}
 
-\begin{algorithm}\caption{\textsc{Raft Consensus Algorithm: Candidate}}
+\begin{algorithm}[H]\caption{\textsc{Raft Consensus Algorithm: Candidate}}
  \begin{algorithmic}[1]
  \State \textsc{IncrementTermCounter()} \Comment{Keeps track of most up-to-date leader}
- \State \textsc{BroadcastElectionPacket()} \Comment{Send nodes an election notice to cause a vote}
+ \State \textsc{BroadcastElectionPacket()} \Comment{Send nodes an election notice to cause a vote\newline }
  \Function{majorityOfVotesReceived()} {}
 	\State $this.state = leader $ \Comment{Transition to Leader Node}
- \EndFunction\
+ \EndFunction{\newline}
  \Function{minorityOfVotesReceived()} {}
  	\State $this.state = follower $ \Comment{Transition to Follwer Node}
  \EndFunction
 \end{algorithmic}
 \end{algorithm}
 
-\begin{algorithm}\caption{\textsc{Raft Consensus Algorithm: Follower}}
+\begin{algorithm}[H]\caption{\textsc{Raft Consensus Algorithm: Follower}}
  \begin{algorithmic}[1]
- \Function{heartbeatTimeoutOccurred()}{} \Comment{No Append Entries packet was received before randomized timeout}
- 	\State{this.state = candidate} \Comment{Transition to a candidate}
- \EndFunction
- \State \textsc{BroadcastElectionPacket()} \Comment{Send nodes an election notice to cause a vote}
- \Function{majorityOfVotesReceived()} {}
-	\State $this.state = leader $ \Comment{Transition to Leader Node}
+ \Function{heartbeatTimeoutOccurred()}{} \Comment{No Append Entries Packet (or AEP) was}
+ 	\State{this.state = candidate} \Comment{received before randomized timeout} 
+ \EndFunction\Comment{Transition to a candidate \newline}
+ \Function{appendEntriesPacketRecieved()}{}  \Comment{AEP was received before timeout}
+ 	\State{\textsc{updateLog()}} \Comment{Append the new entry to this machine's log}
+ 	\State{\textsc{sendPacketsReceivedConfirmation()}} \Comment{Tell the leader machine the packet was}
+ \EndFunction \Comment{received\newline}
+ \Function{commitChangeRequestReceived()} {}
+	\State{\textsc{commitMostRecentLogUpdate()}} \Comment{Only done if the leader sends an AEP}
  \EndFunction\
- \Function{minorityOfVotesReceived()} {}
- 	\State $this.state = follower $ \Comment{Transition to Follwer Node}
- \EndFunction
 \end{algorithmic}
 \end{algorithm}
 
