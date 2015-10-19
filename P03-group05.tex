@@ -14,31 +14,58 @@
 
 \maketitle
 
-(NOTE: this is just a sample outline, and you are free to deviate from this format).
-
-TODO: brief introduction.
-
 \section{Motivation}
-When a cluster of machines exists, it can be difficult to appoint and maintain a common leader as well as maintain a common log between all machines. The Raft Consensus Algorithm (or RCA) was designed to solve this problem with simplicity in mind. This is based off of an older consensus algorithm, Paxos, which is notoriously difficult to understand and implement. The RCA improves upon Paxos by maintaining its correctness and performance, but is vastly more understandable. 
+When a cluster of machines exists, it can be difficult to appoint and maintain a common leader as well as maintain a common log between all machines. The Raft Consensus Algorithm (or RCA) was designed to solve this problem with simplicity in mind. This is based off of an older consensus algorithm, Paxos, which is notoriously difficult to understand and implement. The RCA improves upon Paxos by maintaining its correctness and performance, but is vastly more understandable.
 
 \section{Algorithm}
-Provide pseudocode for the algorithm that your team is investigating.  Provide pseudocode for the algorithm, and be sure to 
+One of the core assumptions in RCA is that the network is unreliable, so any of the machines can fail, causing network delay, packet loss, and duplication. It also assumes that each machine in the network is trusted and all know about each other--it is assumed that if a machine tells the other machines that it is the leader, then this is in fact true and not just a malicious machine.
+
+As the RCA is meant to contain a cluster of machines, it doesn't just run one time, but instead, runs on each machine and can be in a set of three states. We will give the pseudocode for each of these states: Leader (Algorithm 1), Follower (Algorithm 2), and Candidate (Algorithm 3).
+
+The leader accepts log entries from clients, sends them to the other machines, and manages when to change the log entries for the other machines. The leader controls where to place the new log entries and doesn't need to consult with the other machines while doing this. To maintain leader status, it sends heartbeats to all the followers to show that it is still alive. If the leader fails, a new leader will soon become "elected" from the remaining machines in the cluster.  
+
+The candidates are the machines that are potentially going to be the new leader. This can happen once the system is first started up or the leader fails. If a failure occurs, an election begins and the candidate machine first votes for itself and then asks for the other machines' vote. This lead to three conclusions: the candidate wins and becomes the new leader, the candidate loses and follows the new leader, or no one wins and a new election will be held until a leader is found. 
+
+The follower is the default state for the machines in the algorithm. Followers listen and respond to messages sent from the candidates and leaders. If a random timeout occurs, the follower now becomes a candidate. 
 
 \begin{algorithm}[H]\caption{\textsc{Raft Consensus Algorithm: Leader}}
  \begin{algorithmic}[1]
-   \State {\bf Input:} MachineList[] \Comment {Network of computers}
+	\Function{main()} {} \Comment{Runs as long as the machine is up}
+		\While {true}
+			\State{\textsc{heartbeat()}} \Comment{Returns true if a change is requested}
+			\If{listensForChanges() == true}
+				\State{\textsc{makeChange()}}
+			\EndIf
+		\EndWhile
+	\EndFunction{\newline}
 	\State $heartbeat () $
-	\State $main() $
- \Function{heartbeat()} {} \Comment{done every 20ms}
-   \For{$i \to nodeList.length()$}
-   	\State $sendHeartBeat( nodeList[i]) $ \Comment{Sends a heartbeat packet to every machine in the} 
-   \EndFor	\Comment{cluster that affirms that the current leader is still leader}
-   \EndFunction
-   \Function{listenForChanges} {}
-%   \If {change from leader}
- %  \State{addEntryInLog()}
- %  \EndIf
-   \EndFunction
+	\State {$main()$\newline}
+	
+\Comment{Sends a heartbeat packet to every machine in the cluster that affirms the current leader\newline} \Comment{is still the leader}
+ \Function{heartbeat()} {}
+   \For{$i \to machineList.length()$}
+   	\State{\textsc{sendHeartbeat(machineList[i])}}\Comment{Sends heartbeat packet to individual machine}
+   \EndFor
+ \EndFunction{\newline}
+ 
+ \Comment{Someone has SSHed into the leader and changes some files or received a request for \newline}\Comment{change from a follower. Add entry to the local log but do not commit the change.}
+ \Function{makeChange()} {}
+ 	\State
+ 		\textsc{addEntryInLog()}
+ 	\For{$i \to machineList.length()$}
+ 		\State{\textsc{sendLogEntry(machineList[i])}} \Comment{Send log entry to individual machine}
+ 	\EndFor
+ 	\State{count = 0} \Comment{Number of machines that have the accepted log update \newline\newline}
+ 	\Comment{Listens for log entry updates from followers. When majority have received the update, proceed}
+ 	\While{count < (0.5 * machineList.length())} \Comment{returns true if a reply from}
+ 		\If{receiveLogEntry() == true} \Comment{sendLogEntry() is received}
+ 			\State{count++}
+ 		\EndIf
+	\EndWhile{\newline}
+	\For{$i \to machineList.length()$} \State \Comment{The majority of the cluster have added the new log entry. Commit the change}
+		\State{commitLogEntry(machineList[i])} \Comment{send log entry to individual machine}
+	\EndFor
+ \EndFunction
  \end{algorithmic}
 \end{algorithm}
 
